@@ -62,13 +62,13 @@ kernel: generic-kernel arch-kernel
 # This simply calls the current arch's makefile recursively
 arch-kernel:
 	@$(MAKE) kernel-arch -C arch/$(ARCH)
-	@echo "$(ccgreen)DONE: Compiling arch specific kernel parts.$(ccend)"
-	@echo ""
+	@echo "$(ccgreen)DONE: Compiling arch specific kernel parts."
+	@echo "$(ccend)"
 
 # Here we compile the generic kernel by compiling the .o files for the generic part.
 generic-kernel: $(OBJECTS)
-	@echo "$(ccgreen)DONE: Compiling generic kernel parts.$(ccend)"
-	@echo ""
+	@echo "$(ccgreen)DONE: Compiling generic kernel parts."
+	@echo "$(ccend)"
 
 # Automatic dependency graph generation
 -include $(OBJECTS:.o=.d)

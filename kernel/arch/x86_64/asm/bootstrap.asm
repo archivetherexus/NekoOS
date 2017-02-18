@@ -73,6 +73,10 @@ _start:
 	; stack since (pushed 0 bytes so far) and the alignment is thus
 	; preserved and the call is well defined.
 
+	; Push some multiboot data to kmain.
+	push eax ; Header magic
+	push ebx ; Header pointer	
+
 	; Call the kinit in 32 bit mode.
 	extern kinit
 	call kinit

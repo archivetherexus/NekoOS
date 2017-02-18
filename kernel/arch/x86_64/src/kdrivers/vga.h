@@ -31,3 +31,5 @@ void vga_put_char(char c);
 void terminal_write(const char* data, size_t size);
 void terminal_write_string(const char* data);
 
+size_t terminal_row;
+size_t terminal_column;

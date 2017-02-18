@@ -11,7 +11,7 @@ wrong-makefile:
 
 kernel-arch: $(BUILD)/kernel.bin iso-file
 
-$(BUILD)/kernel.bin: $(ARCH_OBJECTS)
+$(BUILD)/kernel.bin: $(ARCH_OBJECTS) $(OBJECTS)
 	$(LINKER) $(LINKER_FLAGS) -T linker.ld -o $(BUILD)/kernel.bin $(OBJECTS) $(ARCH_OBJECTS)
 	@echo "$(ccgreen)DONE: Making kernel for arch: x86_64"
 	@echo "$(ccend)"
