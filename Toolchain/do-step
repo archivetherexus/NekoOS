@@ -1,0 +1,46 @@
+export STEP_NAME=$1
+export STEP_DIR="$STEPS_DIR/$STEP_NAME"
+export STEP_BUILD="$BUILD_DIR/$STEP_NAME"
+
+if [ "$STEP_NAME" == "" ]; then
+	exit 0
+fi
+
+echo "Doing step \"$STEP_NAME\""
+
+if [ ! -d $STEP_DIR ]; then
+	echo "Unknown step \"$STEP_NAME\""
+	exit 1
+fi
+
+cd "$STEP_DIR"
+
+mkdir -p "$STEP_BUILD"
+chmod +x "$STEP_DIR/check-step.sh"
+chmod +x "$STEP_DIR/build-step.sh"
+
+# TODO: Check whether we should resolve dependencies before or after check-step.
+
+if [ -f "$STEP_DIR/dependencies.config" ]; then
+	cat "$STEP_DIR/dependencies.config" | while read p; do 
+		if ! do-step $p ; then
+			echo "Could not satisfy dependencies for \"$STEP_NAME\""
+			exit 1
+		fi
+	done
+	[ $? == 1 ] && exit 0;
+fi
+
+if "$STEP_DIR/check-step.sh"; then
+	if "$STEP_DIR/build-step.sh"; then
+		exit 0;
+	else
+		echo "ERROR could not build \"STEP_NAME\""
+		exit 1;
+	fi
+else
+	echo "Step \"$STEP_NAME\" already done!"
+fi
+
+
+
