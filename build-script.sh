@@ -15,7 +15,7 @@ export PATH="$PATH:$TOOLCHAIN"
 
 # Build the operating system!
 cd "$PROJECT_DIR"
-do-step "OS"
+do-step "BOOT-USB"
 
 
 
