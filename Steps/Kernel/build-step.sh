@@ -16,9 +16,5 @@ if [ ! -f ".config" ]; then
 fi
 
 # Make the kernel.
-make -j6
-STATUS_0=$?
 make bzImage
-STATUS_1=$?
-
-exit $STATUS_0
+exit $?
