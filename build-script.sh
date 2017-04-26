@@ -1,3 +1,5 @@
+rm Build/BOOT-USB/boot.iso
+
 # Get project dir from script location.
 export PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
