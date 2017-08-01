@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 a.out
 out
 vgcore.*
+=======
+/Build/
+.*.swp
+>>>>>>> 48ddcfe06c7b2f817bc7af19f0b237a1c2c5cb61
