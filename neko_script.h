@@ -1,7 +1,7 @@
 /************************************************
- *		 The Neko-Script implementation	   *
- *		 By: Tyrerexus						*
- *		 Date: 31 July 2017				   *
+ *		 The Neko-Script implementation         *
+ *		 By: Tyrerexus                          *
+ *		 Date: 31 July 2017                     *
  ************************************************/
 
 #include "lib.h"
