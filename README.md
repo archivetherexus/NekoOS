@@ -1,6 +1,9 @@
 # NekoOS
 A little microkernel + planned userland
 
+> Goal
+
+A little kernel with a FAT32 fs that has a built-in LISP interpreter.
 
 > What is NekoOS?
 
@@ -12,22 +15,26 @@ Nothing desu. At it's current form it only boots and displays a message. Hopeful
 
 ## File structure
 
-- kernel/
-	- The microkenrel.
+- system/
+	- The kernel.c and other files.
 - userland/
 	- The userland.
 	
 ## Compiling
+Currently compiling is done by
+`cd system; ./build.sh; cd ..`
+
+Old Method:
 1. Read and install all packages that are needed for compilation. This is specified currently in the kernel/requirements.md
 2. Type `make` from the kernel directory.
-3. Tesit it by running the generated nekoos.iso file that is located in the kernel/build/ directory with your prefered emulator.
+3. Test it by running the generated nekoos.iso file that is located in the git root directory with your prefered emulator.
 
 ## Plans for next push :3
-* Threads.
-* PS/2 Keyboard driver.
-* PCI detecting.
-* Enabling the A20 line.
+* FAT32
+* Lisp interpreter
 
 ## Goals
 * Epic lulz and fun while making it.
 * Create an operating system that is cute but *probably* useless in any practical scenario.
+* Mini FAT32
+* LISP interpreter

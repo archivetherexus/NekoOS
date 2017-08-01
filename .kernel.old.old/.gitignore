@@ -1,0 +1,17 @@
+# The Neko Build System.
+build
+
+# Swap.
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+
+# Sessions.
+Session.vim
+
+# Temporary.
+.netrwhist
+*~
+# Auto-generated tag files.
+tags
