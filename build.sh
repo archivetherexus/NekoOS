@@ -2,6 +2,7 @@
 
 # Set and create the out dir.
 OUT_DIR=out
+ARCH=x86_64
 mkdir -p $OUT_DIR
 
 ## Creates the kernel.bin.
@@ -83,10 +84,16 @@ SECTIONS
 END_OF_LINKER
 
 # Compile the main c file.
-gcc -c kernel.c -o $OUT_DIR/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra -m32 -static
+gcc -c kernel.c -o $OUT_DIR/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra -m32 -static -nostdlib -fno-stack-protector
 if [ $? -ne 0 ]; then
 	return 1
 fi
+
+gcc -c neko_script.c -o $OUT_DIR/neko_script.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra -m32 -static -nostdlib -fno-stack-protector
+if [ $? -ne 0 ]; then
+	return 1
+fi
+
 
 # Compile the multiboot.
 nasm -f elf32 -o $OUT_DIR/multiboot.o $OUT_DIR/multiboot.asm
@@ -94,8 +101,13 @@ if [ $? -ne 0 ]; then
 	return 1
 fi
 
+nasm -f elf32 -o $OUT_DIR/x86.o x86.asm
+if [ $? -ne 0 ]; then
+	return 1
+fi
+
 # Link the files.
-ld -n -melf_i386 -T $OUT_DIR/linker.ld -o $OUT_DIR/kernel.bin $OUT_DIR/kernel.o $OUT_DIR/multiboot.o
+ld -n -melf_i386 -T $OUT_DIR/linker.ld -o $OUT_DIR/kernel.bin $OUT_DIR/*.o
 if [ $? -ne 0 ]; then
 	return 1
 fi
@@ -139,7 +151,7 @@ END_OF_GRUB
 # Create the kernel.bin.
 # Then create the bootable.iso which contains grub and kernel.bin.
 # Then copy the bootable.iso away from the out_dir.
-kernel && iso && cp $OUT_DIR/bootable.iso ../nekoo.iso
+kernel && iso && cp $OUT_DIR/bootable.iso ../nekoos.iso
 
 
 # Clean.

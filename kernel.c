@@ -24,15 +24,33 @@
 /// The FAT32 filesystem.
 //#include "fat32.h"
 
+/// The uint*_t types.
+#include <stdint.h>
+
 ///======================================
 /// Operating system implmentation.
 ///======================================
 /// Skip this step if a stdlib is present.
 #ifndef SIMULATE
 
+static inline void outb(uint16_t port, uint8_t val)
+{
+	asm volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline uint8_t inb(uint16_t port) {
+	uint8_t ret;
+	asm volatile ("inb %1, %0"
+					: "=a"(ret)
+					: "Nd"(port));
+	return ret;
+}
+
 //
 // VGA DRIVER
 //
+
+
 
 /// Consts & Variables.
 
@@ -62,6 +80,11 @@ static void vga_terminal_putentryat(char character, uint8_t color, size_t x, siz
 }
  
 static void vga_terminal_putchar(char c) {
+	if (c == '\n') {
+		++vga_terminal_row;
+		vga_terminal_column = 0;
+		return;
+	}
 	vga_terminal_putentryat(c, vga_terminal_color, vga_terminal_column, vga_terminal_row);
 	if (++vga_terminal_column == VGA_WIDTH) {
 		vga_terminal_column = 0;
@@ -90,32 +113,251 @@ void vga_driver_init() {
 }
 
 //
+// IDT driver.
+//
+
+#define IDT_INTERRUPT_GATE 0x8E
+#define IDT_TRAP_GATE      0x8F
+
+typedef struct idt_entry_t {
+   uint16_t offset_low;  // Offset bits 0..15.                     //
+   uint16_t selector;    // A code segment selector in GDT or LDT. //
+   uint8_t zero;         // Unused, set to 0.                      //
+   uint8_t type_attr;    // Type and attributes, see below.        //
+   uint16_t offset_mid;  // Offset bits 16..31.                    //
+   uint32_t offset_high;
+   uint32_t reserved;
+} idt_entry;
+
+typedef struct idt_table_t {
+	uint16_t size;
+	uint32_t offset;
+} __attribute__((__packed__)) idt_table;
+
+void idt_load();
+idt_table idt;
+idt_entry idt_entries[256];
+
+
+void idt_entry_set(idt_entry *entry, uint64_t offset, uint16_t selector, uint8_t type_attr) {
+	entry->offset_low   = (uint16_t)offset;
+	entry->offset_mid   = (uint16_t)(offset >> 16);
+	entry->offset_high  = (uint16_t)(offset >> 32);
+
+	entry->selector  = selector;
+	
+	entry->type_attr = type_attr;
+	
+	entry->zero     = 0;
+	entry->reserved = 0;
+}
+
+
+
+void some_handler() {
+	puts("Kek, we got so far!");
+}
+
+extern void interrupt_keyboard_handler();
+
+static void remap_irqs()
+{
+    // Remap IRQ table. //
+    outb(0x20, 0x11);
+    outb(0xa0, 0x11);
+    outb(0x21, 0x20);
+    outb(0xa1, 0x28);
+    outb(0x21, 0x04);
+    outb(0xa1, 0x02);
+    outb(0x21, 0x01);
+    outb(0xa1, 0x01);
+    outb(0x21, 0x00);
+    outb(0xa1, 0x00);
+}
+
+void idt_driver_init() {
+	idt.size   = (sizeof(idt_entry) * 256) - 1;
+	idt.offset = (uint32_t)&idt_entries; 
+
+	//for (int i = 0; i <= 47; i++) {
+	//	idt_entry_set(&idt_entries[i], (uint32_t)interrupt_keyboard_handler, 0x08, IDT_INTERRUPT_GATE);
+	//}
+
+	//idt_entry_set(&idt_entries[1], (uint32_t)interrupt_keyboard_handler, 0x08, IDT_INTERRUPT_GATE);
+	idt_entry_set(&idt_entries[33], (uint32_t)interrupt_keyboard_handler, 0x08, IDT_INTERRUPT_GATE);
+	idt_entry_set(&idt_entries[21], (uint32_t)interrupt_keyboard_handler, 0x08, IDT_INTERRUPT_GATE);
+
+	idt_load();
+	
+	//asm("int $21");
+}
+
+//
+// GDT driver.
+//
+
+
+// https://en.wikibooks.org/wiki/X86_Assembly/Global_Descriptor_Table
+typedef struct gdt_entry_t {
+	uint16_t limit_low;
+	uint16_t base_low;
+	uint8_t  base_middle;
+	uint8_t  access;
+	uint8_t  granularity;
+	uint8_t  base_high;
+} __attribute__((packed)) gdt_entry;
+
+typedef struct gdt_table_t {
+	uint16_t size;
+	uint32_t offset;
+} __attribute__((__packed__)) gdt_table;
+
+void gdt_load();
+gdt_table gdt;   
+gdt_entry gdt_entries[5];
+
+void gdt_entry_set(gdt_entry *entry, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity) {
+	entry->base_low = (base & 0xffff);
+	entry->base_middle    = (base >> 16) & 0xff;
+	entry->base_high      = (uint8_t)(base >> 24) & 0xff;
+
+	entry->limit_low      = (limit & 0xffff);
+	entry->granularity    = (limit >> 16) & 0x0f;
+
+	entry->granularity    = (uint8_t)(entry->granularity | (granularity & 0xf0));
+	entry->access         = access;
+}
+
+void gdt_driver_init() {
+	gdt.size   = (sizeof (gdt_entry) * 5) - 1;
+	gdt.offset = (uint32_t)&gdt_entries;
+	
+	
+	// Null segment. //
+	gdt_entry_set(&gdt_entries[0], 0, 0,          0,    0   );
+	 
+	// Kernel code segment. //
+    gdt_entry_set(&gdt_entries[1], 0, 0xffffffff, 0x9a, 0xcf);
+    
+    // Kernel data segment. //
+    gdt_entry_set(&gdt_entries[2], 0, 0xffffffff, 0x92, 0xcf);
+    
+    // User mode code segment. //
+    gdt_entry_set(&gdt_entries[3], 0, 0xffffffff, 0xfa, 0xcf); 
+    
+    // User mode data segment. //
+    gdt_entry_set(&gdt_entries[4], 0, 0xffffffff, 0xf2, 0xcf); 
+    
+    gdt_load();
+}
+
+//
+// PS2 Keyboard driver.
+//
+
+unsigned char us_kb_scancode[128] =
+{
+	  0,  27, '1', '2', '3', '4', '5', '6', '7', '8', /* 9 */
+	'9', '0', '-', '=', '\b',                         /* Backspace. */
+	'\t',                                             /* Tab. */
+	'q', 'w', 'e', 'r',                               /* 19 */
+	't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',     /* Enter key. */
+	0,                                                /* 29 - Control. */
+	'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', /* 39 */
+	'\'', '`',   0,                                   /* Left shift. */
+	'\\', 'z', 'x', 'c', 'v', 'b', 'n',               /* 49 */
+	'm', ',', '.', '/',   0,                          /* Right shift. */
+	'*',
+	0,   /* Alt */
+	' ', /* Space bar */
+	0,   /* Caps lock */
+	0,   /* 59 - F1 key ... > */
+	0,  0,   0,   0,   0,   0,   0,   0,
+	0,   /* < ... F10 */
+	0,   /* 69 - Num lock*/
+	0,   /* Scroll Lock */
+	0,   /* Home key */
+	0,   /* Up Arrow */
+	0,   /* Page Up */
+	'-',
+	0,   /* Left Arrow */
+	0,
+	0,   /* Right Arrow */
+	'+',
+	0,   /* 79 - End key*/
+	0,   /* Down Arrow */
+	0,   /* Page Down */
+	0,   /* Insert Key */
+	0,   /* Delete Key */
+	0,  0,   0,
+	0,   /* F11 Key */
+	0,   /* F12 Key */
+	0,   /* All other keys are undefined */
+};
+
+char ps2_keyboard_last_code;
+
+int ps2_keyboard_getchar() {
+	int keyboard_code=0;
+	do {
+		if(inb(0x60) != keyboard_code) {
+			keyboard_code=inb(0x60);
+			if(keyboard_code > 0 && ps2_keyboard_last_code != keyboard_code) {
+				unsigned char c = us_kb_scancode[keyboard_code];
+				ps2_keyboard_last_code = keyboard_code;
+				if (c >= 7 && c <= 127)
+					return c;
+			}
+		}
+	} while(1);
+}
+
+//
 // Kernel stuff
 //
 
+/// x86.asm functions
+void a20_init();
+void pmode_init();
+
+
 /// The main function. 
+
+void pmain() {
+	
+	puts("Welcome to NekoOS v0.1");
+	while(true) {
+		putchar(getchar());
+	}
+}
 
 /** This functions is called from the bootup assembly. */
 void kmain() {
-	/* Init vga. */
-	vga_driver_init();
-	puts("Welcome to NekoOS v0.1");
 
-	/* Done. */
-	__asm__ __volatile__("cli");
-	while(1);
+	// Init drivers. //
+	a20_init();
+	vga_driver_init();
+	gdt_driver_init();
+	remap_irqs();
+	idt_driver_init();
+	outb(0x64, 0xFF);
+	pmode_init();
+	
+	
+	puts("ERROR: Entering protected mode failed!");
+	while (true);
 }
 
 //=======================================
 // Implement the lib.h functions.
 //=======================================
 
-int putchar(char c) {
+int putchar(int c) {
 	vga_terminal_putchar(c);
 	return c;	
 }
 
-int puts(char *str) {
+int puts(const char *str) {
 	while(*str != 0)
 		putchar(*str++);
 	putchar('\n');
@@ -123,8 +365,8 @@ int puts(char *str) {
 }
 
 int getchar() {
-	// FIXME: Not implemented yet...
-	return '\0';
+	return ps2_keyboard_getchar();
+	
 }
 
 size_t strlen(const char *str) {
@@ -135,11 +377,44 @@ size_t strlen(const char *str) {
 }
 
 int strcmp (const char *str1, const char *str2) {
-	while(*s1 && (*s1 == *s2)) {
-		s1++;
-		s2++;
+	while(*str1 && (*str1 == *str2)) {
+		str1++;
+		str2++;
 	}
-	return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+	return *(const unsigned char*)str1 - *(const unsigned char*)str2;
+}
+
+bool isalpha(const int c) {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+bool isdigit(const int c) {
+	return c >= '0' && c <= '9';
+}
+
+long atol(const char *s)
+{
+    long num = 0;
+ 
+    for (; s != NULL; s++)
+    {
+        if (*s == ' ' || *s == '\t' || isalpha(*s))
+            continue;
+        else
+            break;
+    }
+    
+    if (*s == NULL)
+        return -1;
+        
+    for (; *s != NULL; s++)
+    {
+        if (isdigit(*s))
+            num = num * 10 + (*s - '0');
+        else
+            break;
+    }
+    return num;
 }
 
 //=======================================

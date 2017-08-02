@@ -7,6 +7,11 @@
 #define size_t long
 #endif
 
+/// Define NULL
+#ifndef NULL
+#define NULL 0
+#endif
+
 /// Define booleans.
 #define true 1
 #define false 0
@@ -24,6 +29,8 @@ int getchar();
 size_t strlen(const char *str);
 int strcmp (const char *str1, const char *str2);
 long atol(const char *str);
+bool isalpha(const int c);
+bool isdigit(const int c);
 
 /// Memmory managment.
 void free(void *ptr);

@@ -63,7 +63,7 @@ Instruction string_to_instruction(const char *str);
 
 /// These macros can be used for defining new instructions. 
 #define instruction(INST_NAME) script_instruction_ ## INST_NAME
-#define define_instruction(INST_NAME) void instruction(INST_NAME) (ScriptRuntime *runtime) 
+#define define_instruction(INST_NAME) void instruction(INST_NAME) (__attribute__((unused)) ScriptRuntime *runtime) 
 
 /// Define the headers.
 define_instruction(add);
