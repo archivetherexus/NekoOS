@@ -1,0 +1,16 @@
+IndentWidth: 4
+UseTab: ForIndentation
+ColumnLimit: 0
+IndentCaseLabels: false
+SpaceAfterCStyleCast: false
+AlignConsecutiveAssignments: true
+
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+    IndentBraces: true
+
+SpaceBeforeParens: ControlStatements
