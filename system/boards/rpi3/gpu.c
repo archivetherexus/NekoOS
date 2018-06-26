@@ -1,7 +1,7 @@
 #include "mailbox.h"
+#include "kdraw/framebuffer.h"
 
-unsigned int rpi3_fb_width, rpi3_fb_height, rpi3_fb_pitch;
-unsigned char *rpi3_fb;
+struct KDRAW_Framebuffer rpi3_framebuffer;
 
 void rpi3_gpu_init() {
   rpi3_mailbox[0] = 35 * 4;
@@ -51,10 +51,11 @@ void rpi3_gpu_init() {
   if (rpi3_mailbox_call(RPI3_MailBoxChannelProp) && rpi3_mailbox[20] == 32 &&
       rpi3_mailbox[28] != 0) {
     rpi3_mailbox[28] &= 0x3FFFFFFF;
-    rpi3_fb_width = rpi3_mailbox[5];
-    rpi3_fb_height = rpi3_mailbox[6];
-    rpi3_fb_pitch = rpi3_mailbox[33];
-    rpi3_fb = (void *)((unsigned long)rpi3_mailbox[28]);
+    rpi3_framebuffer.width = rpi3_mailbox[5];
+    rpi3_framebuffer.height = rpi3_mailbox[6];
+    rpi3_framebuffer.pitch = rpi3_mailbox[33];
+    rpi3_framebuffer.framebuffer = (void *)((unsigned long)rpi3_mailbox[28]);
+    rpi3_framebuffer.mode = KDRAW_FRAMEBUFFER_RGB;
   } else {
     // uart_puts("Unable to set screen resolution to 1024x768x32\n");
   }

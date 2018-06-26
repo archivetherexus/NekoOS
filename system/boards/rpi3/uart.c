@@ -4,20 +4,20 @@
 /**
  * Memory-Mapped I/O output
  */
-static inline void mmio_write(uint32_t reg, uint32_t data) {
-  uint32_t *dest = (uint32_t *)reg;
-  *dest = data;
+static inline void mmio_write(size_t reg, uint32_t data) {
+  *(uint32_t *)reg = data;
 }
 
 /**
  * Memory-Mapped I/O input
  */
-static inline uint32_t mmio_read(uint32_t reg) {
-  uint32_t *src = (uint32_t *)reg;
-  return *src;
+static inline uint32_t mmio_read(size_t reg) {
+  return *(uint32_t *)reg;
 }
 
-// Loop <delay> times in a way that the compiler won't optimize away
+/**
+ *  Loop <delay> times in a way that the compiler won't optimize away
+ */
 static inline void delay(int32_t count) {
   __asm__ volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
                    : "=r"(count)
