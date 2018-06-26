@@ -37,10 +37,9 @@ void init_drivers() {
   rpi3_gpu_init();
 
   show_rectangle(&rpi3_framebuffer);
+  kfont_draw_character('H', 20, 20, &kfont_default_font, &rpi3_framebuffer);
 
-  char font8x8copy[128][8];
-  struct KFONT_BitmapFont default_font = kfont_get_default_font(font8x8copy);
+  kfont_draw_ncharacters("Ok", 2, 20, 40, &kfont_default_font, &rpi3_framebuffer);
 
-
-  kfont_draw_character('H', 20, 20, /*&kfont_default_font*/ &default_font, &rpi3_framebuffer);
+  kfont_draw_characters("Hello World!", 20, 60, &kfont_default_font, &rpi3_framebuffer);
 }

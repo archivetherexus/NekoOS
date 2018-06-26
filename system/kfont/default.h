@@ -4,8 +4,6 @@
 
 #include "font.h"
 
-//extern struct KFONT_BitmapFont kfont_default_font; 
-
-struct KFONT_BitmapFont kfont_get_default_font();
+extern struct KFONT_BitmapFont kfont_default_font; 
 
 #endif
