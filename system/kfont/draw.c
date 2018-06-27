@@ -39,7 +39,7 @@ static void rgb_draw_character(const char character, const int x, const int y, c
 void kfont_draw_character(const char character, const int x, const int y, const struct KFONT_BitmapFont *font, const struct KDRAW_Framebuffer *fb) {
     switch(fb->mode) {
     case KDRAW_FRAMEBUFFER_RGB:
-        rgb_draw_character(character, x * 4, y * 4, font, fb);
+        rgb_draw_character(character, x * 4, y, font, fb);
         break;
     default:
         // TODO: Report error;

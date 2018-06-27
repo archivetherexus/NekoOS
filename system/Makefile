@@ -9,7 +9,7 @@ TARGET ?= rpi3
 include boards/$(TARGET)/$(TARGET)-config.mk
 
 # Add the object files.
-OBJS += main.o kfont/draw.o kfont/default.o
+OBJS += main.o kfont/draw.o kfont/default.o kdraw/shapes.o
 CFLAGS += -I.
 
 # Include the sub-rules.

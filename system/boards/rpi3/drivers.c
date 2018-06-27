@@ -2,44 +2,25 @@
 #include "gpu.h"
 #include "uart.h"
 #include "kdraw/framebuffer.h"
+#include "kdraw/shapes.h"
 #include "kfont/default.h"
 #include "kfont/draw.h"
 
 extern struct KDRAW_Framebuffer rpi3_framebuffer;
 
-static void show_rectangle(struct KDRAW_Framebuffer *fb) {
-
-  int rectangle_width = 100;
-  int rectangle_height = 100;
-
-  int x, y;
-  unsigned char *ptr = fb->framebuffer;
-  char pixel[4];
-  pixel[0] = 255;
-  pixel[1] = 0;
-  pixel[2] = 255;
-
-  ptr += (fb->height - rectangle_height) / 2 * fb->pitch +
-         (fb->width - rectangle_width) * 2;
-  for (y = 0; y < rectangle_height; y++) {
-    for (x = 0; x < rectangle_width; x++) {
-      *((unsigned int *)ptr) = *((unsigned int *)&pixel);
-      ptr += 4;
-    }
-    ptr += fb->pitch - rectangle_width * 4;
-  }
-}
-
-
-
 void init_drivers() {
   rpi3_uart_init();
   rpi3_gpu_init();
 
-  show_rectangle(&rpi3_framebuffer);
-  kfont_draw_character('H', 20, 20, &kfont_default_font, &rpi3_framebuffer);
+  char pixel[4];
+  pixel[0] = 255;
+  pixel[1] = 255;
+  pixel[2] = 0;
+  kdraw_draw_rectangle(100, 100, 100, 100, pixel, &rpi3_framebuffer);
 
-  kfont_draw_ncharacters("Ok", 2, 20, 40, &kfont_default_font, &rpi3_framebuffer);
+  kfont_draw_character('H', 8, 20, &kfont_default_font, &rpi3_framebuffer);
+
+  kfont_draw_ncharacters("Ok", 2, 8, 28, &kfont_default_font, &rpi3_framebuffer);
 
   kfont_draw_characters("Hello World!", 20, 60, &kfont_default_font, &rpi3_framebuffer);
 }

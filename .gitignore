@@ -1,4 +1,8 @@
+# Output
+*.o
+*.elf
+*.img
+
+# Misc
 .vscode
-a.out
-out
 vgcore.*
