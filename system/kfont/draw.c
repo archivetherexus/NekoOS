@@ -14,36 +14,21 @@ static bool font_get_pixel(const char character, const int x, const int y, const
     }
 }
 
-// TODO: Less hardcoded way of accessing that number 4....
-
-
-// TODO: Perhaps this could be moved into kdraw in some intelligent way...
-static void rgb_draw_character(const char character, const int x, const int y, const struct KFONT_BitmapFont *font, const struct KDRAW_Framebuffer *fb) {
+// TODO: Perhaps the mapping between data and pixel could be moved into kdraw in some intelligent way...
+void kfont_draw_character(const char character, const int x, const int y, const struct KFONT_BitmapFont *font, const struct KDRAW_Framebuffer *fb) {
+    int depth_in_bytes = fb->depth / 8;
     int height = font->character_height;
     int width = font->character_width;
     unsigned char *ptr = fb->framebuffer;
     char pixelOn[4] = {255, 255, 255, 0};
     char pixelOff[4] = {0, 0, 0, 0};
-    ptr += y * fb->pitch + x;
+    ptr += y * fb->pitch + x * depth_in_bytes;
     for (int cy = 0; cy < height; cy++) {
         for (int cx = 0; cx < width; cx++) {
             *((unsigned int *)ptr) = font_get_pixel(character, cx, cy, font) ? *((unsigned int *)&pixelOn) : *((unsigned int *)&pixelOff);
-            ptr += 4;
+            ptr += depth_in_bytes;
         }
-        ptr += fb->pitch - width * 4;
-    }
-
-}
-
-
-void kfont_draw_character(const char character, const int x, const int y, const struct KFONT_BitmapFont *font, const struct KDRAW_Framebuffer *fb) {
-    switch(fb->mode) {
-    case KDRAW_FRAMEBUFFER_RGB:
-        rgb_draw_character(character, x * 4, y, font, fb);
-        break;
-    default:
-        // TODO: Report error;
-        break;
+        ptr += fb->pitch - width * depth_in_bytes;
     }
 }
 

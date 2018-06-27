@@ -55,7 +55,7 @@ void rpi3_gpu_init() {
     rpi3_framebuffer.height = rpi3_mailbox[6];
     rpi3_framebuffer.pitch = rpi3_mailbox[33];
     rpi3_framebuffer.framebuffer = (void *)((unsigned long)rpi3_mailbox[28]);
-    rpi3_framebuffer.mode = KDRAW_FRAMEBUFFER_RGB;
+    rpi3_framebuffer.depth = 32;
   } else {
     // uart_puts("Unable to set screen resolution to 1024x768x32\n");
   }
